@@ -8,9 +8,13 @@ def full_title(page_title)
 	end
 end
 
-def valid_signin(user)
+def fillInfo(user)
 	fill_in "Email", with: user.email
 	fill_in "Password", with: user.password
+end
+
+def valid_signin(user)
+	fillInfo(user)
 	click_button "Sign in"
 end
 
