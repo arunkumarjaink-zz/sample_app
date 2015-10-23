@@ -8,6 +8,17 @@ describe "StaticPages" do
     it { should have_selector('h1', text: heading) }
     it { should have_selector('title', text: full_title(page_title)) }
   end
+  describe "micropost pagination" do
+    let(:user) { FactoryGirl.create(:user) }
+    before do
+      31.times { FactoryGirl.create(:micropost, user: user) }
+      sign_in user
+      visit root_path
+    end
+    after { user.microposts.destroy_all }
+
+    it { should have_selector("div.pagination") }
+  end
 
   describe "Home page" do
     before { visit root_path }
@@ -16,6 +27,27 @@ describe "StaticPages" do
 
     it_should_behave_like "all static pages"
     it { should_not have_selector 'title', text: '| Home' }
+
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before do
+        FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+        sign_in user
+        visit root_path
+      end
+      describe "micropost counts" do
+        before { click_link "delete" }
+        it "should be singular when count eq to 1" do
+          page.should have_selector("span", text: "1 micropost")
+        end
+      end
+      it "should render the user's feed" do
+        user.feed.each do |item|
+          page.should have_selector("li##{item.id}", text: item.content)
+        end
+      end
+    end
   end
 
   describe "Help page" do

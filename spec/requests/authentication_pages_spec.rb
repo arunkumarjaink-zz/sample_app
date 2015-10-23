@@ -43,6 +43,15 @@ describe "Authentication" do
 	end
 
 	describe "authorization" do
+    describe "as signed-in user " do
+    let(:user) { FactoryGirl.create(:user) }
+    before { sign_in user }
+      describe "cannot delete other users posts" do
+        let(:other_user) { FactoryGirl.create(:user) }
+        before { visit user_path(other_user) }
+        it { should_not have_link('delete') }
+      end
+    end
       describe "as non-admin user" do
         let(:user) { FactoryGirl.create(:user) }
         let(:non_admin) { FactoryGirl.create(:user) }
@@ -54,6 +63,17 @@ describe "Authentication" do
       end
     	describe "for non-signed-in users" do
       		let(:user) { FactoryGirl.create(:user) }
+
+          describe "in the microposts controller" do
+            describe "submitting to the destroy action" do
+              before { delete micropost_path(FactoryGirl.create(:micropost)) }
+              specify { response.should redirect_to(signin_path) }
+            end
+            describe "submitting to the create action" do
+              before { post microposts_path }
+              specify { response.should redirect_to(signin_path) }
+            end
+          end
 
       		describe "when attempting to visit a protected page" do
       			before do
