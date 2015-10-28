@@ -30,13 +30,18 @@ class UsersController < ApplicationController
   def create
     if !signed_in?
   	   @user = User.new(params[:user])
+       respond_to do |format|
   	   if @user.save
+          ExampleMailer.sample_email(@user).deliver
           sign_in @user
   		    flash[:success] = "Welcome to the Sample App!"
-  		    redirect_to @user
+          format.html { redirect_to @user, notice: 'User was successfully created.' }
+          format.json { render :show, status: :created, location: @user }
   	   else
-  		    render 'new'
+  		    format.html { render :new }
+          format.json { render json: @user.errors, status: :unprocessable_entity }
   	   end
+     end
     else
         redirect_to root_path
     end

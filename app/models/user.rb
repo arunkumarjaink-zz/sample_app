@@ -39,6 +39,7 @@ class User < ActiveRecord::Base
 
   def follow!(other_user)
     relationships.create!(followed_id: other_user.id)
+    ExampleMailer.follow_email(other_user,self)
   end
 
   def unfollow!(other_user)
