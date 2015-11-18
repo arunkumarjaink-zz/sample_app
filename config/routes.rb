@@ -5,6 +5,7 @@ SampleApp::Application.routes.draw do
       get :following, :followers
     end
   end
+  resources :account_activations, only: [:edit]
   resources :sessions, only: [:new, :create, :destroy]
   resources :microposts, only: [:create, :destroy]
   resources :relationships, only: [:create, :destroy]

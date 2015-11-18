@@ -4,6 +4,11 @@ module SessionsHelper
 		self.current_user = user
 	end
 
+	def remember(user)
+		user.remember
+		cookies.permanent.signed[:user_id] = user.id
+	end
+
 	def signed_in?
 		!current_user.nil?
 	end

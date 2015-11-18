@@ -32,10 +32,9 @@ class UsersController < ApplicationController
   	   @user = User.new(params[:user])
        respond_to do |format|
   	   if @user.save
-          ExampleMailer.sample_email(@user).deliver
+          @user.send_activation_email
           sign_in @user
-  		    flash[:success] = "Welcome to the Sample App!"
-          format.html { redirect_to @user, notice: 'User was successfully created.' }
+          format.html { redirect_to @user, notice: 'Please check your email to activate your account.' }
           format.json { render :show, status: :created, location: @user }
   	   else
   		    format.html { render :new }

@@ -13,7 +13,8 @@
 #
 
 class User < ActiveRecord::Base
-  attr_accessible :email, :name, :password, :password_confirmation
+  include ActiveModel::ForbiddenAttributesProtection
+  attr_accessible :email, :name, :password, :password_confirmation, :admin, :activated, :activated_at
   has_secure_password
   has_many :microposts, dependent: :destroy
   has_many :relationships, foreign_key: "follower_id", dependent: :destroy
@@ -22,6 +23,7 @@ class User < ActiveRecord::Base
   has_many :followers, through: :reverse_relationships, source: :follower
   before_save { self.email.downcase! }
   before_save :create_remember_token
+  before_create :create_activation_digest
   validates :name, presence: true, length: { maximum: 50 }
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
   validates :email, presence: true, format: { with: VALID_EMAIL_REGEX },
@@ -45,9 +47,34 @@ class User < ActiveRecord::Base
   def unfollow!(other_user)
     relationships.find_by_followed_id(other_user.id).destroy
   end
+
+  def User.digest(string)
+    cost = BCrypt::Engine::MIN_COST
+    BCrypt::Password.create(string, cost: cost)
+  end
+
+  def authenticated?(attribute, token)
+  	digest = send("#{attribute}_digest")
+  	return false if digest.nil?
+  	BCrypt::Password.new(digest).is_password?(token)
+  end
+
+  def activate
+  	update_attribute(:activated, true)
+  	update_attribute(:activated_at, Time.zone.now)
+  end
+
+  def send_activation_email
+    UserMailer.account_activation(self).deliver
+  end
   
   private
   	def create_remember_token
   		self.remember_token = SecureRandom.urlsafe_base64
+  	end
+
+  	def create_activation_digest
+  		activation_token = SecureRandom.urlsafe_base64
+  		self.activation_digest = User.digest(activation_token)
   	end
 end
